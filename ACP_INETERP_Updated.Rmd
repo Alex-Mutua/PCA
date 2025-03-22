@@ -1,0 +1,180 @@
+---
+title: "ACP"
+author: "Alex Mutua"
+date: "17/03/2025"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Chargement de pacckages
+```{r}
+library("FactoMineR")
+library("factoextra")
+```
+
+#Importation de la base
+```{r}
+# Charger le fichier
+base <- read.table("ACP_eaux.txt", sep = "\t", fileEncoding = "latin1" , header = TRUE, row.names = 1)
+
+head(base)
+```
+
+#Commençons par extraire les individus actifs et les variables actives pour l’ACP
+```{r}
+base_active= base[, 5:12]
+head(base_active)
+```
+
+
+#Convertir les colonnes en numérique
+
+```{r}
+base_active[] = lapply(base_active, function(x) gsub(",", ".", x))
+
+ 
+base_active[] = lapply(base_active, function(x) as.numeric(x))
+head(base_active) 
+```
+
+
+#Statistiques sommaires des variables
+```{r}
+summary(base_active)
+```
+
+
+#Matrice des corrélations
+```{r}
+mat_cor=cor(base_active)
+mat_cor
+```
+##Interpretatio:
+..............................
+
+
+
+##ACP
+Notez que, par défaut, la fonction PCA(), normalise les données automatiquementpendant l’ACP.
+
+```{r}
+res.pca=PCA(base_active, graph = FALSE)
+res.pca
+res.pca$eig
+```
+
+##Interprétation:
+................................................................................
+
+
+
+
+##Le graphique des valeurs propres
+```{r}
+fviz_eig(res.pca, addlabels = TRUE, ylim = c(0, 50))
+```
+
+
+
+### Affichage des vecteurs propres (composantes principales)
+
+```{r}
+vect =res.pca$svd$V
+vect
+```
+
+
+#Graphique des variables
+
+
+```{r}
+value = get_pca_var(res.pca)
+value
+```
+
+
+
+```{r}
+# Coordonnées
+head(value$coord)
+# Cos2: qualité de répresentation
+head(value$cos2)
+# Contributions aux composantes principales
+head(value$contrib)
+```
+### Interpretation:
+The Cos2 values indicate how well each variable is represented on the principal components. A high Cos2 value (close to 1) means the variable is well represented, while lower values suggest weaker representation. Contributions show how much each variable influences the principal components; higher contributions indicate stronger influence.
+...........................
+
+# Coordonnées des variables sur les axes principaux
+
+
+
+
+##Cercle de corrélation
+```{r}
+fviz_pca_var(res.pca)
+```
+
+##Qualité de représentation
+```{r}
+head(value$cos2, 8)
+```
+
+
+```{r}
+fviz_pca_var(res.pca, col.var = "cos2")
+```
+
+```{r}
+fviz_pca_var(res.pca, col.var = "contrib")
+```
+
+### Interpretation:
+In the correlation circle, variables positioned closer to the circumference have stronger correlations with the principal components. Positively correlated variables are grouped together, while negatively correlated variables are on opposite sides. Variables near the center contribute less to the component structure.
+..............................................
+
+
+##Visualisation la contribution des individus aux deux premières composantes principales
+
+```{r}
+fviz_pca_ind (res.pca)
+```
+
+#coloration dees individus en fonction de leurs valeurs de cos2:
+```{r}
+fviz_pca_ind (res.pca, col.ind = "cos2",
+ gradient.cols = c("blue", "yellow", "red"),
+ repel = TRUE)
+```
+#Modification la taille des points en fonction du cos2 des individus correspondants:
+```{r}
+fviz_pca_ind (res.pca, pointsize = "cos2",
+ pointshape = 22, fill = "red",
+ repel = TRUE )
+```
+### Interpretation:
+The individuals' graph helps visualize the positioning of observations. Observations close to each other have similar profiles. Those far from the center contribute significantly to the variance explained by the principal components. The color gradient (e.g., blue → yellow → red) represents the quality of representation, where red indicates the best representation.
+............................................
+
+
+
+
+
+#visualisation de la contribution des individus aux deux premières composantes principales
+```{r}
+# Contribution totale sur PC1 et PC2
+fviz_contrib(res.pca, choice = "ind", axes = 1:2)
+```
+
+### Interpretation:
+This graph highlights which individuals contribute the most to the first two principal components. Higher contribution values suggest that those observations strongly influence the PCA structure. Individuals with the highest contributions should be analyzed further as they define the main patterns in the dataset.
+........................................
+
+
+
+
+
